@@ -64,7 +64,6 @@ public class JCacheManager implements javax.cache.CacheManager {
     private volatile boolean closed = false;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final ConcurrentMap<JCache, JCacheManagementMXBean> cfgMXBeans = new ConcurrentHashMap<JCache, JCacheManagementMXBean>();
-    private final ConcurrentMap<JCache, JCacheStatMXBean> statMXBeans = new ConcurrentHashMap<JCache, JCacheStatMXBean>();
 
     public JCacheManager(final JCacheCachingProvider jCacheCachingProvider, final CacheManager cacheManager, final URI uri, final Properties props) {
         this.jCacheCachingProvider = jCacheCachingProvider;
@@ -86,7 +85,7 @@ public class JCacheManager implements javax.cache.CacheManager {
 
     @Override
     public ClassLoader getClassLoader() {
-        return cacheManager.getConfiguration().getClassLoader();
+        return null;
     }
 
     @Override
@@ -229,25 +228,7 @@ public class JCacheManager implements javax.cache.CacheManager {
     }
 
     private void enableStatistics(final boolean enabled, final JCache jCache) {
-        try {
-            if(enabled) {
-                registerObject(getOrCreateStatObject(jCache));
-            } else {
-                unregisterObject(statMXBeans.remove(jCache));
-            }
-            ((JCacheConfiguration)jCache.getConfiguration(JCacheConfiguration.class)).setStatisticsEnabled(enabled);
-        } catch (NotCompliantMBeanException e) {
-            throw new CacheException(e);
-        } catch (InstanceAlreadyExistsException e) {
-            // throw new CacheException(e);
-        } catch (MBeanRegistrationException e) {
-            throw new CacheException(e);
-        } catch (InstanceNotFoundException e) {
-            // throw new CacheException(e);
-        } catch (MalformedObjectNameException e) {
-            throw new CacheException("Illegal ObjectName for Management Bean. " +
-                                     "CacheManager=[" + getURI().toString() + "], Cache=[" + jCache.getName() + "]", e);
-        }
+        ((JCacheConfiguration)jCache.getConfiguration(JCacheConfiguration.class)).setStatisticsEnabled(enabled);
     }
 
     private void registerObject(final JCacheMXBean cacheMXBean) throws NotCompliantMBeanException,
@@ -272,18 +253,6 @@ public class JCacheManager implements javax.cache.CacheManager {
         if(cacheMXBean == null) {
             cacheMXBean = new JCacheManagementMXBean(jCache);
             final JCacheManagementMXBean previous = cfgMXBeans.putIfAbsent(jCache, cacheMXBean);
-            if(previous != null) {
-                cacheMXBean = previous;
-            }
-        }
-        return cacheMXBean;
-    }
-
-    private JCacheStatMXBean getOrCreateStatObject(final JCache jCache) {
-        JCacheStatMXBean cacheMXBean = statMXBeans.get(jCache);
-        if(cacheMXBean == null) {
-            cacheMXBean = new JCacheStatMXBean(jCache);
-            final JCacheStatMXBean previous = statMXBeans.putIfAbsent(jCache, cacheMXBean);
             if(previous != null) {
                 cacheMXBean = previous;
             }
@@ -331,9 +300,8 @@ public class JCacheManager implements javax.cache.CacheManager {
     }
 
     private CacheConfiguration toEhcacheConfig(final String name, final Configuration configuration) {
-        final int maxSize = cacheManager.getConfiguration().isMaxBytesLocalHeapSet() ? 0 : DEFAULT_SIZE;
+        final int maxSize = DEFAULT_SIZE;
         CacheConfiguration cfg = new CacheConfiguration(name, maxSize);
-        cfg.setClassLoader(cacheManager.getConfiguration().getClassLoader());
         if(configuration.isStoreByValue()) {
             final CopyStrategyConfiguration copyStrategyConfiguration = new CopyStrategyConfiguration();
             copyStrategyConfiguration.setCopyStrategyInstance(new JCacheCopyOnWriteStrategy());

@@ -53,15 +53,15 @@ class JCacheCopyOnWriteStrategy implements ReadWriteCopyStrategy<Element> {
      * Deep copies some object and returns an internal storage-ready copy
      */
     @Override
-    public Element copyForWrite(final Element value, final ClassLoader classLoader) {
+    public Element copyForWrite(final Element value) {
         if (value == null) {
             return null;
         } else {
             Object elementValue = value.getObjectValue();
             Object elementKey = value.getObjectKey();
 
-            Object newKey = toObject(toByteArray(elementKey), classLoader);
-            Object serializedValue = toObject(toByteArray(elementValue), classLoader);
+            Object newKey = toObject(toByteArray(elementKey));
+            Object serializedValue = toObject(toByteArray(elementValue));
 
             return duplicateElementWithNewValue(value, newKey, serializedValue);
         }
@@ -95,17 +95,17 @@ class JCacheCopyOnWriteStrategy implements ReadWriteCopyStrategy<Element> {
      * Reconstruct an object from its storage-ready copy.
      */
     @Override
-    public Element copyForRead(final Element storedValue, final ClassLoader classLoader) {
+    public Element copyForRead(final Element storedValue) {
         if (storedValue == null) {
             return null;
         } else {
-            Object newKey = toObject(toByteArray(storedValue.getObjectKey()), classLoader);
-            Object deserializedValue = toObject(toByteArray(storedValue.getObjectValue()), classLoader);
+            Object newKey = toObject(toByteArray(storedValue.getObjectKey()));
+            Object deserializedValue = toObject(toByteArray(storedValue.getObjectValue()));
             return duplicateElementWithNewValue(storedValue, newKey, deserializedValue);
         }
     }
 
-    Object toObject(byte[] bytes, ClassLoader loader) {
+    Object toObject(byte[] bytes) {
         if (bytes == null) {
             return null;
         }
@@ -113,7 +113,7 @@ class JCacheCopyOnWriteStrategy implements ReadWriteCopyStrategy<Element> {
         ObjectInputStream ois = null;
         Object deserializedElement;
         try {
-            ois = new PreferredClassLoaderObjectInputSteam(bin, loader);
+            ois = new ObjectInputStream(bin);
             deserializedElement = ois.readObject();
         } catch (Exception e) {
             throw new CacheException("When configured copyOnRead or copyOnWrite, a Store will only accept Serializable values", e);

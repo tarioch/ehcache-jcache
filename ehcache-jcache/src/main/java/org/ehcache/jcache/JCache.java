@@ -149,7 +149,10 @@ public class JCache<K, V> implements Cache<K, V> {
             if(key == null) throw new NullPointerException();
         }
         final Map<K, V> result = new HashMap<K, V>();
-        final Map<Object, Element> all = ehcache.getAll(keys);
+        final Map<Object, Element> all = new HashMap<Object, Element>(keys.size());;
+        for (K key : keys) {
+            all.put(key, ehcache.get(key));
+        }
         for (Map.Entry<Object, Element> entry : all.entrySet()) {
             final Element e = entry.getValue();
             final K key = (K)entry.getKey();
@@ -582,7 +585,9 @@ public class JCache<K, V> implements Cache<K, V> {
                     }
                 }
             } else {
-                ehcache.removeAll(keys);
+                for (K key:keys){
+                    ehcache.remove(key);
+                }
             }
         }
     }

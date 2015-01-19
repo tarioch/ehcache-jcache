@@ -148,18 +148,4 @@ class JCacheCacheWriterAdapter<K, V> implements CacheWriter {
         }
         jsr107CacheWriter.deleteAll(javaxCacheEntries);
     }
-
-    /**
-     * {@inheritDoc}
-     *
-     * This method will be called, whenever an Element couldn't be handled by the writer and all
-     * the {@link net.sf.ehcache.config.CacheWriterConfiguration#getRetryAttempts() retryAttempts} have been tried.
-     * <p>When batching is enabled all the elements in the failing batch will be passed to this methods
-     * <p>Try to not throw RuntimeExceptions from this method. Should an Exception occur, it will be logged, but
-     * the element will be lost anyways.
-     */
-    @Override
-    public void throwAway(Element element, SingleOperationType operationType, RuntimeException e) {
-
-    }
 }
