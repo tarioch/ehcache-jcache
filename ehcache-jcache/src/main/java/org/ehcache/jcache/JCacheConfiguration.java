@@ -89,23 +89,28 @@ public class JCacheConfiguration<K, V> implements javax.cache.configuration.Comp
                 cacheWristerFactory = null;
                 initialCacheEntryListenerConfigurations = new HashSet<CacheEntryListenerConfiguration<K, V>>();
             } else {
-                expiryPolicyFactory = null;
-                expiryPolicy = new ExpiryPolicy() {
-                    @Override
-                    public Duration getExpiryForCreation() {
-                        return new Duration(TimeUnit.SECONDS, cacheConfiguration.getTimeToLiveSeconds());
-                    }
-
-                    @Override
-                    public Duration getExpiryForAccess() {
-                        return new Duration(TimeUnit.SECONDS, cacheConfiguration.getTimeToLiveSeconds());
-                    }
-
-                    @Override
-                    public Duration getExpiryForUpdate() {
-                        return getExpiryForCreation();
-                    }
-                };
+                if(cacheConfiguration.isEternal()){
+                    expiryPolicyFactory = EternalExpiryPolicy.factoryOf();
+                    expiryPolicy = expiryPolicyFactory.create();
+                } else {
+                    expiryPolicyFactory = null;
+                    expiryPolicy = new ExpiryPolicy() {
+                        @Override
+                        public Duration getExpiryForCreation() {
+                            return new Duration(TimeUnit.SECONDS, cacheConfiguration.getTimeToLiveSeconds());
+                        }
+    
+                        @Override
+                        public Duration getExpiryForAccess() {
+                            return new Duration(TimeUnit.SECONDS, cacheConfiguration.getTimeToLiveSeconds());
+                        }
+    
+                        @Override
+                        public Duration getExpiryForUpdate() {
+                            return getExpiryForCreation();
+                        }
+                    };
+                }
                 storeByValue = false;
                 readThrough = false;
                 writeThrough = false;
